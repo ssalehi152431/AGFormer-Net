@@ -1,126 +1,155 @@
-# 🧠 AGFormer-Net: A Transformer-Guided Attention-Gated Framework for 3D Brain Tumor Segmentation
+# AGFormer-Net: A Transformer-Guided Attention-Gated Framework for 3D Brain Tumor Segmentation
 
 ![Python](https://img.shields.io/badge/Python-3.x-blue.svg)
 ![PyTorch](https://img.shields.io/badge/Framework-PyTorch-red.svg)
----
 
-## 📘 Overview
-**AGFormer-Net** is a two-stage deep learning architecture for **3D multimodal brain tumor segmentation** from MRI volumes.  
-It unifies **transformers**, **attention gates**, and **variational autoencoders (VAE)** to capture both global and local contextual information for precise delineation of glioma subregions—**Whole Tumor (WT)**, **Tumor Core (TC)**, and **Enhancing Tumor (ET)**—on the **BraTS-2020** benchmark dataset.
+## Overview
+AGFormer-Net is a two-stage deep learning framework designed for 3D brain tumor segmentation from multimodal MRI scans.  
+It integrates **transformer modules**, **attention gates**, and **variational autoencoders (VAE)** to achieve high-precision tumor delineation and robust generalization across heterogeneous data.
 
-The model achieves **Dice scores of 87.09 % (WT), 80.32 % (TC), and 74.63 % (ET)**, surpassing existing U-Net-based baselines in both volumetric overlap and boundary accuracy.
-
----
-
-## 💡 Motivation
-Manual delineation of glioma regions in multi-modal MRI is time-consuming, prone to inter-observer variability, and unscalable for large datasets.  
-Traditional CNN architectures struggle with long-range dependency modeling and irregular tumor morphologies.  
-AGFormer-Net bridges this gap by combining:
-- **Transformer modules** for capturing *global context*  
-- **Attention gates** for *region-specific focus*  
-- **VAE regularization** for *robust feature learning* and distributional consistency
-
-This synergy enables more accurate segmentation of heterogeneous tumor structures and better generalization across patients.
+This model was proposed in the ICCCNT 2025 paper titled  
+**“AGFormer-Net: A Transformer-Guided Attention-Gated Framework for 3D Brain Tumor Segmentation.”**
 
 ---
 
-## 🏗️ Architecture Summary
-AGFormer-Net is a **two-stage cascaded encoder-decoder** framework:
+## Motivation
+Manual tumor annotation is time-consuming and inconsistent across radiologists.  
+While U-Net-based architectures have achieved significant success, they often fail to capture long-range dependencies and complex tumor boundaries.  
 
-### 🔹 Stage I – Transformer-Augmented Asymmetric U-Net + VAE
-- **ResNet-based encoder** extracts hierarchical 3D features.  
-- **Transformer bottleneck** (embedding dim = 512, depth = 4) models global dependencies.  
-- **VAE branch** reconstructs the input volume for feature regularization.  
-- Output: coarse segmentation map of tumor subregions.
-
-### 🔹 Stage II – Attention-Gated Asymmetric U-Net
-- Inputs: concatenation of MRI modalities + Stage I predictions (7-channel input).  
-- **Attention gates** suppress irrelevant activations and refine boundaries, emphasizing enhancing tumor regions.  
-- Produces the final high-resolution segmentation.
-
-**Loss Function:**  
-\[
-L = L_{Dice} + 0.1\,L_{L2} + 0.1\,L_{KL}
-\]
-combining soft Dice loss, VAE reconstruction loss, and Kullback–Leibler divergence.
+AGFormer-Net addresses these challenges by introducing:
+- Transformer-based global context modeling
+- Attention-gated feature refinement
+- Variational autoencoder (VAE) regularization for robust latent representations
 
 ---
 
-## 🧪 Dataset
-- **Benchmark:** [BraTS 2020 Dataset](https://www.med.upenn.edu/cbica/brats2020/)  
-- **Samples:** 369 train + 125 validation + 166 test cases  
+## Architecture
+AGFormer-Net follows a **two-stage cascaded encoder-decoder design**:
+
+### Stage I – Transformer-Augmented Asymmetric U-Net + VAE
+- ResNet-based encoder extracts 3D hierarchical features.
+- Transformer bottleneck captures global dependencies (embedding dimension = 512, depth = 4).
+- A parallel VAE branch reconstructs input volumes for regularization.
+- Produces an initial coarse segmentation.
+
+### Stage II – Attention-Gated Asymmetric U-Net
+- Input: concatenation of the original modalities and Stage I predictions.
+- Attention gates selectively emphasize tumor boundaries.
+- Outputs refined segmentation for **Whole Tumor (WT)**, **Tumor Core (TC)**, and **Enhancing Tumor (ET)**.
+
+**Overall Loss:**
+L = L_Dice + 0.1 * L_L2 + 0.1 * L_KL
+
+---
+
+## Dataset
+- **Dataset:** [BraTS 2020](https://www.med.upenn.edu/cbica/brats2020/)
+- **Training Samples:** 369 cases  
+- **Validation Samples:** 125 cases  
+- **Testing Samples:** 166 cases  
 - **Modalities:** T1, T1Gd, T2, FLAIR  
 - **Resolution:** 240 × 240 × 155 voxels  
 - **Labels:** Necrotic/Non-enhancing (1), Edema (2), Enhancing (4)
 
-Preprocessing includes intensity normalization, patch cropping (128³ voxels), and 3D flipping augmentations.
+**Preprocessing:**
+- N4 bias correction
+- Intensity normalization (z-score)
+- Patch extraction (128³)
+- Random flipping and rotation augmentations
 
 ---
 
-## ⚙️ Implementation Details
-- **Framework:** PyTorch  
-- **Hardware:** Tesla P100 (16 GB GPU, Google Colab Pro)  
-- **Optimizer:** Adam (lr = 1e-4, 50 epochs)  
-- **Scheduler:** Polynomial decay \((1 – e/ N_e)^{0.9}\)  
-- **Augmentations:** Random cropping, intensity scaling [0.9, 1.1], 3D axis flips  
+## Implementation Details
+- **Framework:** PyTorch
+- **Hardware:** Tesla P100 (16 GB GPU)
+- **Optimizer:** Adam (lr = 1e-4)
+- **Scheduler:** Polynomial decay with power = 0.9
+- **Batch Size:** 2
+- **Epochs:** 50 per stage
 
 ---
 
-## ▶️ Usage
-# Clone the repository
+## Training and Evaluation
+
+### Clone the repository
+```bash
 git clone https://github.com/ssalehi152431/AGFormer-Net.git
 cd AGFormer-Net
+```
 
-# (Optional) Create a virtual environment
-python3 -m venv venv
-source venv/bin/activate        # Linux/macOS
-venv\Scripts\activate           # Windows
-
-# Install dependencies
+### Create environment and install dependencies
+```bash
+python -m venv venv
+source venv/bin/activate        # Linux/Mac
+venv\Scripts\activate         # Windows
 pip install -r requirements.txt
+```
 
-# Train Stage I
+### Train Stage I
+```bash
 python train_stage1.py --dataset brats2020 --epochs 50 --batch_size 2
+```
 
-# Train Stage II
+### Train Stage II
+```bash
 python train_stage2.py --dataset brats2020 --epochs 50 --batch_size 2 --load_stage1 results/stage1.pth
+```
 
-# Evaluate
+### Evaluate the final model
+```bash
 python evaluate.py --weights results/final_model.pth --dataset brats2020
+```
 
+Outputs include segmentation maps, Dice/HD95 metrics, and qualitative overlays stored in `/results/`.
 
+---
 
-Outputs:
+## Results
 
-Dice and HD95 scores
+| Model | WT (DSC %) | TC (DSC %) | ET (DSC %) | WT (HD95 mm) | TC (HD95 mm) | ET (HD95 mm) |
+|:------|:------------:|:------------:|:------------:|:-------------:|:-------------:|:-------------:|
+| 3D U-Net | 84.11 | 79.06 | 68.76 | 13.37 | 14.61 | 50.98 |
+| V-Net | 84.63 | 75.26 | 61.79 | 20.41 | 21.18 | 47.70 |
+| Residual 3D U-Net | 82.46 | 76.47 | 71.63 | 12.34 | 13.11 | 37.42 |
+| **AGFormer-Net (Proposed)** | **87.09** | **80.32** | **74.63** | **6.47** | **10.47** | **16.72** |
 
-Visualization maps in results/
+AGFormer-Net significantly improves Dice and boundary precision, particularly for small enhancing tumor regions.
 
-Key Features
+---
 
-✅ Dual-stage 3D segmentation with transformer and attention modules
-✅ Variational autoencoder for latent regularization
-✅ Multimodal MRI fusion (T1, T1Gd, T2, FLAIR)
-✅ Improved Dice and HD95 over state-of-the-art baselines
-✅ Modular PyTorch implementation for research extensions
+## Ablation Study
 
-🔮 Future Directions
+| Transformer Embedding Dim | WT (DSC %) | TC (DSC %) | ET (DSC %) |
+|:--------------------------:|:-----------:|:-----------:|:-----------:|
+| 384 | 81.35 | 73.02 | 69.95 |
+| 512 | **87.09** | **80.32** | **74.63** |
+| 768 | 82.55 | 81.56 | 70.50 |
 
-Lightweight transformer variants for real-time clinical use
+The 512-dimensional embedding yielded the best performance-to-complexity tradeoff.
 
-Uncertainty quantification and confidence maps
+---
 
-Cross-dataset generalization and federated training
+## Key Contributions
+1. A hybrid architecture combining **Transformers + Attention Gates + VAE** for 3D segmentation.  
+2. Dual-stage refinement that improves boundary accuracy and lesion completeness.  
+3. Demonstrated superior performance on **BraTS 2020** against strong CNN baselines.  
+4. Provides a flexible PyTorch implementation for brain tumor segmentation research.
 
-Ensemble methods and multi-modal fusion beyond MRI
+---
 
-📜 Citation
-
+## Citation
 If you use this work, please cite:
 
-P. Datta, S. Salehin, A. J. Islam, S. Das, S. Paul,
-“AGFormer-Net: A Transformer-Guided Attention-Gated Framework for 3D Brain Tumor Segmentation,”
-16th IEEE International Conference on Computing, Communication and Networking Technologies (ICCCNT 2025), pp. 1–8, 2025.
+> P. Datta, S. Salehin, A. J. Islam, S. Das, and S. Paul,  
+> *“AGFormer-Net: A Transformer-Guided Attention-Gated Framework for 3D Brain Tumor Segmentation,”*  
+> 16th IEEE International Conference on Computing, Communication and Networking Technologies (ICCCNT 2025), pp. 1–8, 2025.
 
+---
+
+## Authors
+**Prasun Datta**, **Sultanus Salehin**, **Akib Jayed Islam**, **Sajeeb Das**, **Srijit Paul**  
+*(BUET, IUT Bangladesh, NTNU Norway, NIT India)*  
+
+Contact: [salehi@ncsu.edu](mailto:salehi@ncsu.edu)
 
 
