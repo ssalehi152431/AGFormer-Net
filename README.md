@@ -67,7 +67,6 @@ Preprocessing includes intensity normalization, patch cropping (128³ voxels), a
 ---
 
 ## ▶️ Usage
-```bash
 # Clone the repository
 git clone https://github.com/ssalehi152431/AGFormer-Net.git
 cd AGFormer-Net
@@ -88,3 +87,40 @@ python train_stage2.py --dataset brats2020 --epochs 50 --batch_size 2 --load_sta
 
 # Evaluate
 python evaluate.py --weights results/final_model.pth --dataset brats2020
+
+
+
+Outputs:
+
+Dice and HD95 scores
+
+Visualization maps in results/
+
+Key Features
+
+✅ Dual-stage 3D segmentation with transformer and attention modules
+✅ Variational autoencoder for latent regularization
+✅ Multimodal MRI fusion (T1, T1Gd, T2, FLAIR)
+✅ Improved Dice and HD95 over state-of-the-art baselines
+✅ Modular PyTorch implementation for research extensions
+
+🔮 Future Directions
+
+Lightweight transformer variants for real-time clinical use
+
+Uncertainty quantification and confidence maps
+
+Cross-dataset generalization and federated training
+
+Ensemble methods and multi-modal fusion beyond MRI
+
+📜 Citation
+
+If you use this work, please cite:
+
+P. Datta, S. Salehin, A. J. Islam, S. Das, S. Paul,
+“AGFormer-Net: A Transformer-Guided Attention-Gated Framework for 3D Brain Tumor Segmentation,”
+16th IEEE International Conference on Computing, Communication and Networking Technologies (ICCCNT 2025), pp. 1–8, 2025.
+
+
+
