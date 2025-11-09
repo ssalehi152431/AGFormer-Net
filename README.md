@@ -2,9 +2,6 @@
 
 ![Python](https://img.shields.io/badge/Python-3.x-blue.svg)
 ![PyTorch](https://img.shields.io/badge/Framework-PyTorch-red.svg)
-![License](https://img.shields.io/badge/License-MIT-green.svg)
-![Status](https://img.shields.io/badge/Status-Research%20Prototype-brightgreen.svg)
-
 ---
 
 ## 📘 Overview
